@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:developer';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class LanguageDropdown extends StatefulWidget {
@@ -37,15 +36,19 @@ class LanguageDropdownState extends State<LanguageDropdown> {
       _selectedLocaleId = locales.first.localeId;
     });
 
-    log(_locales.toString());
-
     widget.onLocaleSelected(_selectedLocaleId!);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_locales.isEmpty) {
-      return const CircularProgressIndicator();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Select Language:', style: TextStyle(fontSize: 16)),
+          const Text("You just have one language in your system: English"),
+        ],
+      );
     }
 
     return Column(

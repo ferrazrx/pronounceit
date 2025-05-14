@@ -49,5 +49,7 @@
 	<string>This app uses the microphone for speech input.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app uses speech recognition to convert your voice to text.</string>
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
