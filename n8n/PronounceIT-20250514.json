@@ -1,0 +1,532 @@
+{
+  "name": "PronounceIT",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cbfbbeed-d1d9-4efc-a3e1-633da64f8fbb",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        -420
+      ],
+      "id": "3527da23-5b2e-4e47-b900-ce4415ad9319",
+      "name": "Webhook",
+      "webhookId": "cbfbbeed-d1d9-4efc-a3e1-633da64f8fbb"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "file",
+        "options": {
+          "language": "={{ $json.body.language }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -140,
+        -420
+      ],
+      "id": "15e4aa91-a202-4637-9700-229655119639",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "xItvZ5oUFv9hWmkg",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputItems = [];\n\n// Loop over input items (assuming the transcription is in the first item's JSON)\nfor (const item of $input.all()) {\n  const transcription = item.json.text; // Get the transcription text\n\n  // Define a regular expression to match common punctuation marks\n  // This regex includes . , ! ? ; : \" ' ( ) [ ] { }\n  const punctuationRegex = /[.,!?;:'\"()\\[\\]{}]/g;\n\n  // Remove punctuation using the replace method\n  const cleanedTranscription = transcription.replace(punctuationRegex, '');\n\n  // Add the cleaned transcription to the output item\n  outputItems.push({\n    json: {\n      cleanedTranscription: cleanedTranscription,\n      originalTranscription: transcription // Optionally keep the original as well\n    }\n  });\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -420
+      ],
+      "id": "d512277d-e484-4026-b82a-006d3a4ea7eb",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## Speech to Text \nConverts audio to text and clean punctuation",
+        "height": 300,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -520
+      ],
+      "id": "aa3b643a-c314-49c3-b2db-d3ee75dff1aa",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputItems = [];\n\n// Loop over input items (even if there's only one)\nfor (const item of $input.all()) {\n\n  const originalText = $('Webhook').first().json.body.originalText\n\n\n  const transcription = $input.first().json.cleanedTranscription\n\n  // Perform comparison and find differences (using the basic method from step 2)\n  let isCorrectAnswer = true;\n  let differences = [];\n\n  if (originalText !== transcription) {\n    isCorrectAnswer = false;\n\n    const minLength = Math.min(originalText.length, transcription.length);\n    for (let i = 0; i < minLength; i++) {\n      if (originalText[i] !== transcription[i]) {\n        differences.push(`Position <span class=\"math-inline\">\\{i\\}\\: Original\\='</span>{originalText[i]}', Transcription='${transcription[i]}'`);\n      }\n    }\n    if (originalText.length > transcription.length) {\n      differences.push(`Original has extra characters at the end: '${originalText.substring(minLength)}'`);\n    } else if (transcription.length > originalText.length) {\n      differences.push(`Transcription has extra characters at the end: '${transcription.substring(minLength)}'`);\n    }\n  }\n\n  // Create an output item with the results\n  outputItems.push({\n    json: {\n      originalText: originalText,\n      transcription: transcription,\n      isCorrectAnswer,\n      differences: differences.join('\\n')\n    }\n  });\n}\n\n// Return the array of output items\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        -420
+      ],
+      "id": "1755529f-3520-44d3-b178-7433820c5a93",
+      "name": "Compare"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83b43269-80ad-4639-a5aa-0eb813110798",
+              "leftValue": "={{ $json.isCorrectAnswer }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        500,
+        -420
+      ],
+      "id": "fba984f2-e73f-424f-9a95-ed5ba096975b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Congrats\nPlan the correct answer path",
+        "height": 260,
+        "width": 700,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -600
+      ],
+      "id": "8b80a2d9-a945-4656-8a80-abbbeabe6a44",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Insights\nPlan the wrong answer path",
+        "height": 520,
+        "width": 700,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -320
+      ],
+      "id": "eaa51d70-f83c-4610-8102-d09a5efd8f6a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.transcription }}",
+        "options": {
+          "systemMessage": "=You are an expert pronunciation coach. A user is trying to pronounce the following phrase:\n\nLanguage user is practicing: {{ $('Webhook').item.json.body.language }}\n\nOriginal phrase: {{ $json.originalText }}}\n\nThe transcription of their attempt is in the user's input.\n\nProvide insights on how the user can improve their pronunciation. Focus on specific areas where the user can improve. Do not include filler or conversational text, only provide the insights.\n\nReply as you are talking direct to the user.\n\n\nThe spreadsheet you can use as a tool has the previous user attempts, including the original phrase at that moment, the transcription at that moment and the result/suggestion you've gave this user. Use it to understand their difficulties or their accents."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        840,
+        -220
+      ],
+      "id": "c8672754-6154-48fb-aff8-17440457ada8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        780,
+        20
+      ],
+      "id": "194ef0b9-8744-4c4d-ac23-5d6cc561ac48",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "W2bYBg2Kd77VoBYa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -220
+      ],
+      "id": "bf682dae-4498-450f-94c5-f71e30e78a7d",
+      "name": "Markdown",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        1960,
+        -420
+      ],
+      "id": "c3a2370a-a68f-4b2c-ba43-d4aee0368e9c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1660,
+        -420
+      ],
+      "id": "447c9595-5d63-4158-80cc-3b48fc29bb6e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0",
+          "mode": "list",
+          "cachedResultName": "PronounceIT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "originalPhrase": "={{ $('Compare').item.json.originalText }}",
+            "Transcription": "={{ $('Compare').item.json.transcription }}",
+            "Suggestions": "={{ $json.output }}",
+            "userId": "={{ $today }}"
+          },
+          "matchingColumns": [
+            "userId"
+          ],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "originalPhrase",
+              "displayName": "originalPhrase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Transcription",
+              "displayName": "Transcription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Suggestions",
+              "displayName": "Suggestions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        -140
+      ],
+      "id": "c1ad4708-be07-42fd-9b21-9b6dc144403a",
+      "name": "Google Sheets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "txUDojSBUvmhWQb6",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0",
+          "mode": "list",
+          "cachedResultName": "PronounceIT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EvybOgoJYZHsblLgYdRJDJodnnSuuXab1eA90cMJzC0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "userId",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        1020,
+        20
+      ],
+      "id": "6073051a-3d0c-46b2-893c-745c2edc2d68",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "txUDojSBUvmhWQb6",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Compare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b757cbc3-60d2-4f91-b82e-9bcf0e0a4aca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "72a1467ae5cb0127b40bcd3563d6a14f4420f8b00304ce81da5ae21732d6ec98"
+  },
+  "id": "4w6Xmg7PnbWNNoIg",
+  "tags": [
+    {
+      "name": "fun",
+      "id": "8VcGae2Y829sQ6c4",
+      "createdAt": "2025-05-14T14:16:45.733Z",
+      "updatedAt": "2025-05-14T14:16:45.733Z"
+    },
+    {
+      "name": "mAI",
+      "id": "LabIQLoBJTlcPcFn",
+      "createdAt": "2025-05-14T14:16:41.749Z",
+      "updatedAt": "2025-05-14T14:16:41.749Z"
+    },
+    {
+      "createdAt": "2025-05-14T14:16:11.220Z",
+      "updatedAt": "2025-05-14T14:16:11.220Z",
+      "id": "vGKYVTS9orO1mgnN",
+      "name": "REDspace"
+    },
+    {
+      "name": "hackathon",
+      "id": "w4fxFHWHBvo3qBZP",
+      "createdAt": "2025-05-14T14:16:27.285Z",
+      "updatedAt": "2025-05-14T14:16:27.285Z"
+    }
+  ]
+}
