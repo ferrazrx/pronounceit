@@ -1,0 +1,333 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "compare",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        180
+      ],
+      "id": "769f2533-16cd-41b6-9043-f6c608e1101f",
+      "name": "Webhook",
+      "webhookId": "cbfbbeed-d1d9-4efc-a3e1-633da64f8fbb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputItems = [];\n\nfor (const item of $input.all()) {\n  // Extract values from the webhook body\n  const body = item.json.body || item.json; // fallback if body is not nested\n  const originalText = body.text1;\n  const transcription = body.text2;\n  const language = body.language;\n\n  let isCorrectAnswer = true;\n  let differences = [];\n\n  if (originalText !== transcription) {\n    isCorrectAnswer = false;\n\n    const minLength = Math.min(originalText.length, transcription.length);\n    for (let i = 0; i < minLength; i++) {\n      if (originalText[i] !== transcription[i]) {\n        differences.push(`Position ${i}: Original='${originalText[i]}', Transcription='${transcription[i]}'`);\n      }\n    }\n\n    if (originalText.length > transcription.length) {\n      differences.push(`Original has extra characters at the end: '${originalText.substring(minLength)}'`);\n    } else if (transcription.length > originalText.length) {\n      differences.push(`Transcription has extra characters at the end: '${transcription.substring(minLength)}'`);\n    }\n  }\n\n  outputItems.push({\n    json: {\n      originalText,\n      transcription,\n      language,\n      isCorrectAnswer,\n      differences: differences.join('\\n')\n    }\n  });\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        180
+      ],
+      "id": "e0b5e7aa-7ea9-4779-b516-24836239f2fd",
+      "name": "Compare"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83b43269-80ad-4639-a5aa-0eb813110798",
+              "leftValue": "={{ $json.isCorrectAnswer }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        180
+      ],
+      "id": "5a2dd5f4-efa6-40bf-bb84-28e3d6dbcb84",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Congrats\nPlan the correct answer path",
+        "height": 260,
+        "width": 700,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1050ff7c-68bc-4640-9b8b-16148a579fe0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Insights\nPlan the wrong answer path",
+        "height": 520,
+        "width": 700,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        280
+      ],
+      "id": "cf5456d9-e8ff-428e-8262-979b0d9826d3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.transcription }}",
+        "options": {
+          "systemMessage": "=You are an expert pronunciation coach. A user is trying to pronounce the following phrase:\n\nLanguage user is practicing: {{ $('Webhook').item.json.body.language }}\n\nOriginal phrase: {{ $json.originalText }}}\n\nThe transcription of their attempt is in the user's input.\n\nProvide insights on how the user can improve their pronunciation. Focus on specific areas where the user can improve. Do not include filler or conversational text, only provide the insights.\n\nReply as you are talking direct to the user. Return a maximum of 3 phrases only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        100,
+        380
+      ],
+      "id": "e9f1b176-4a8f-4592-849f-3e49adbb130e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        460,
+        380
+      ],
+      "id": "20cb72e5-ab84-4037-9010-834e5b220788",
+      "name": "Markdown",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        1220,
+        180
+      ],
+      "id": "c986af74-2001-47f6-9ed9-777c1980f818",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        920,
+        180
+      ],
+      "id": "fed48dce-4b66-4293-8cf8-5c660cb21d15",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "phi3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        100,
+        600
+      ],
+      "id": "1b9af031-1058-4e18-9671-204e3f1f9424",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "yqw0gBLR8BnAD9lm",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        600
+      ],
+      "id": "7fed45c9-bd81-44f9-abfe-c735e58c5ea0",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "ctrZioUkE1PFX6MV",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Compare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "543fca4e-224d-45ba-8c82-df777fd85b6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf29f31b7a848378e3df5ef9c7f6b418fe2049fef2bc1b1dba9f3f4f203de1c0"
+  },
+  "id": "nLcc0K0txrWisKjQ",
+  "tags": [
+    {
+      "createdAt": "2025-05-20T13:26:19.020Z",
+      "updatedAt": "2025-05-20T13:26:19.020Z",
+      "id": "B2crpm6qjqPr62vV",
+      "name": "fun"
+    },
+    {
+      "createdAt": "2025-05-20T13:26:19.042Z",
+      "updatedAt": "2025-05-20T13:26:19.042Z",
+      "id": "CEo03ar2C6LkauRe",
+      "name": "hackathon"
+    },
+    {
+      "createdAt": "2025-05-20T13:26:19.028Z",
+      "updatedAt": "2025-05-20T13:26:19.028Z",
+      "id": "dlfxFO9WKhyxjl7b",
+      "name": "REDspace"
+    },
+    {
+      "createdAt": "2025-05-20T13:26:19.036Z",
+      "updatedAt": "2025-05-20T13:26:19.036Z",
+      "id": "i73unJhr74akX30s",
+      "name": "mAI"
+    }
+  ]
+}
