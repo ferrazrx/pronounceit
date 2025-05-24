@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pronounceit/pages/home-page.dart';
+import 'package:pronounceit/pages/steps/context.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: '.env');
@@ -15,9 +17,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
       debugShowCheckedModeBanner: false,
       home: const MyHomePage(),
     );
@@ -35,10 +34,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: SvgPicture.asset('assets/text.svg', height: 20),
+        toolbarHeight: 190,
+        backgroundColor: Color.fromARGB(255, 4, 13, 33),
+        title: Image.asset('assets/logo.png', height: 150),
       ),
-      body: HomePage(),
+      body: ChangeNotifierProvider(
+        create: (_) => ContextProvider(),
+        child: const HomePage(),
+      ),
     );
   }
 }

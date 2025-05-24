@@ -12,6 +12,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - n8n-net
+    ports:
+      - "5432:5432"
   n8n:
     image: n8nio/n8n
     restart: always

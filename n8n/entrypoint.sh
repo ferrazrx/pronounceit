@@ -3,8 +3,6 @@
 /bin/ollama serve &
 
 pid=$!
-
-
 sleep 5
 
 echo "🔴 Retrieve phi3 model..."

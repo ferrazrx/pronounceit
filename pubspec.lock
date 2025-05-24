@@ -192,6 +192,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.16.0"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -240,6 +248,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: "4abbd070a04e9ddc287673bf5a030c7ca8b685ff70218720abab8b092f53dd84"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -365,6 +381,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  wheel_picker:
+    dependency: "direct main"
+    description:
+      name: wheel_picker
+      sha256: c116ef7e801d50b090ecd033b41efecd82f90fb51dbfc3543408bba54e36ed83
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1"
+  wizard_stepper:
+    dependency: "direct main"
+    description:
+      name: wizard_stepper
+      sha256: e428242b66ad68c3841775c90349f3ee12b08a39dfb36c38cb84be4928292f0f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.10"
   xml:
     dependency: transitive
     description:
