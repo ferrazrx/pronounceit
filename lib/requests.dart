@@ -11,7 +11,7 @@ Future<Stream<String>> fetchComparison(
   String language,
 ) async {
   final client = http.Client();
-  final uri = Uri.parse('${dotenv.env["API_URL"]}/compare');
+  final uri = Uri.parse('${dotenv.env["API_URL"]}');
   final request = http.Request('POST', uri);
 
   request.headers.addAll({
@@ -26,12 +26,12 @@ Future<Stream<String>> fetchComparison(
   });
 
   log(request.body);
-
   final response = await client.send(request);
 
   final stream = response.stream
       .transform(utf8.decoder)
       .transform(const LineSplitter());
+  log(uri.path);
 
   return stream;
 }

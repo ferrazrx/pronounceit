@@ -16,6 +16,7 @@ export const compareText = async (
     Can you give me:
     1. In the first line, the difference in pronunciation between the two.
     2. Tips on how to pronounce the first text.
+    3. Give a maximum of two sentences.
     `,
   });
   return response;

@@ -1,11 +1,40 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:pretty_diff_text/pretty_diff_text.dart';
 import 'package:pronounceit/pages/steps/context.dart';
+import 'package:pronounceit/requests.dart';
 import 'package:provider/provider.dart';
 import 'package:wizard_stepper/wizard_stepper.dart';
 
-class Result extends StatelessWidget with WizardStep {
-  Result({super.key});
+class Result extends StatefulWidget with WizardStep {
+  VoidCallback onReset;
+  Result({super.key, required this.onReset});
+
+  @override
+  State<Result> createState() => _ResultState();
+}
+
+class _ResultState extends State<Result> {
+  Stream<String>? responseStream;
+  StringBuffer buffer = StringBuffer();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ContextProvider appContext = Provider.of<ContextProvider>(
+        context,
+        listen: false,
+      );
+      responseStream = await fetchComparison(
+        appContext.phrase,
+        appContext.speakedPhrase,
+        appContext.language,
+      );
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +43,7 @@ class Result extends StatelessWidget with WizardStep {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: ValueListenableBuilder<bool>(
-        valueListenable: isCompleteNotifier,
+        valueListenable: widget.isCompleteNotifier,
         builder: (context, isComplete, child) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -23,7 +52,7 @@ class Result extends StatelessWidget with WizardStep {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
                 child: Center(
-                  child: Text("🗣️", style: TextStyle(fontSize: 60)),
+                  child: Text("🎉", style: TextStyle(fontSize: 60)),
                 ),
               ),
               Container(
@@ -31,8 +60,8 @@ class Result extends StatelessWidget with WizardStep {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.blueAccent, // Vibrant blue
-                      Colors.lightBlueAccent, // Cyan
+                      Colors.pinkAccent, // Vibrant blue
+                      Colors.deepPurple, // Cyan
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -60,7 +89,7 @@ class Result extends StatelessWidget with WizardStep {
                             fontWeight: FontWeight.bold,
                           ),
                           addedTextStyle: TextStyle(
-                            color: Colors.white,
+                            color: Colors.green,
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
@@ -68,6 +97,42 @@ class Result extends StatelessWidget with WizardStep {
                           oldText: appContext.phrase,
                           newText: appContext.speakedPhrase,
                         ),
+                      ),
+                    ),
+                    Divider(),
+                    Text(
+                      "How can you improve?",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: StreamBuilder<String>(
+                        stream: responseStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            buffer.write(snapshot.data);
+                          }
+                          log(buffer.toString());
+                          return Text(
+                            buffer.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: ElevatedButton(
+                        onPressed: widget.onReset,
+                        child: Text('Reset Wizard'),
                       ),
                     ),
                   ],

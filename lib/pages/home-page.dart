@@ -77,7 +77,12 @@ class HomePageState extends State<HomePage> {
             Expanded(
               child: WizardStepper(
                 controller: controller,
-                steps: [LanguagePicker(), PhrasePicker(), Speak(), Result()],
+                steps: [
+                  LanguagePicker(),
+                  PhrasePicker(),
+                  Speak(),
+                  Result(onReset: onResetWizard),
+                ],
               ),
             ),
           ],
